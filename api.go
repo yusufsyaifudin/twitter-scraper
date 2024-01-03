@@ -2,13 +2,17 @@ package twitterscraper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
 )
 
 const bearerToken string = "AAAAAAAAAAAAAAAAAAAAAPYXBAAAAAAACLXUNDekMxqa8h%2F40K4moUkGsoc%3DTYfbDKbT3jJPCEVnMYqilB28NHfOPqkca3qaAxGfsyKCs0wRbw"
+
+var ErrStatusTooManyRequests = errors.New("http.StatusTooManyRequests")
 
 // RequestAPI get JSON from frontend API and decodes it
 func (s *Scraper) RequestAPI(req *http.Request, target interface{}) error {
@@ -47,10 +51,23 @@ func (s *Scraper) RequestAPI(req *http.Request, target interface{}) error {
 	}
 
 	resp, err := s.client.Do(req)
+	defer func(httpResp *http.Response) {
+		if httpResp == nil {
+			return
+		}
+		if httpResp.Body == nil {
+			return
+		}
+
+		if _err := httpResp.Body.Close(); _err != nil {
+			slog.ErrorContext(req.Context(), "failed to close response body", slog.Any("error", _err))
+			return
+		}
+	}(resp)
+
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
 	content, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -58,6 +75,11 @@ func (s *Scraper) RequestAPI(req *http.Request, target interface{}) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		switch resp.StatusCode {
+		case http.StatusTooManyRequests:
+			return fmt.Errorf("%w: response status %s: %s", ErrStatusTooManyRequests, resp.Status, content)
+		}
+
 		return fmt.Errorf("response status %s: %s", resp.Status, content)
 	}
 
