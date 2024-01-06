@@ -101,6 +101,7 @@ func (s *Scraper) WithClientTimeout(timeout time.Duration) *Scraper {
 // If you want to use your own token, you can set it with this method.
 func (s *Scraper) WithCSRFToken(token string) *Scraper {
 	s.csrfToken = token
+	s.isLogged = true
 	return s
 }
 
