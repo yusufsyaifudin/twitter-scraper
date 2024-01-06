@@ -16,6 +16,7 @@ import (
 
 // Scraper object
 type Scraper struct {
+	csrfToken      string
 	bearerToken    string
 	client         *http.Client
 	delay          int64
@@ -90,9 +91,16 @@ func (s *Scraper) WithReplies(b bool) *Scraper {
 	return s
 }
 
-// client timeout
+// WithClientTimeout client timeout
 func (s *Scraper) WithClientTimeout(timeout time.Duration) *Scraper {
 	s.client.Timeout = timeout
+	return s
+}
+
+// WithCSRFToken set csrf token.
+// If you want to use your own token, you can set it with this method.
+func (s *Scraper) WithCSRFToken(token string) *Scraper {
+	s.csrfToken = token
 	return s
 }
 

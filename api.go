@@ -50,6 +50,11 @@ func (s *Scraper) RequestAPI(req *http.Request, target interface{}) error {
 		}
 	}
 
+	// Replace existing CSRF token with the new one if set.
+	if s.csrfToken != "" {
+		req.Header.Set("X-CSRF-Token", s.csrfToken)
+	}
+
 	resp, err := s.client.Do(req)
 	defer func(httpResp *http.Response) {
 		if httpResp == nil {
