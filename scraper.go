@@ -16,7 +16,6 @@ import (
 
 // Scraper object
 type Scraper struct {
-	csrfToken      string
 	bearerToken    string
 	client         *http.Client
 	delay          int64
@@ -30,6 +29,7 @@ type Scraper struct {
 	proxy          string
 	searchMode     SearchMode
 	wg             sync.WaitGroup
+	respHeader     http.Header
 }
 
 // SearchMode type
@@ -97,14 +97,6 @@ func (s *Scraper) WithClientTimeout(timeout time.Duration) *Scraper {
 	return s
 }
 
-// WithCSRFToken set csrf token.
-// If you want to use your own token, you can set it with this method.
-func (s *Scraper) WithCSRFToken(token string) *Scraper {
-	s.csrfToken = token
-	s.isLogged = true
-	return s
-}
-
 // SetProxy
 // set http proxy in the format `http://HOST:PORT`
 // set socket proxy in the format `socks5://HOST:PORT`
@@ -168,4 +160,8 @@ func (s *Scraper) SetProxy(proxyAddr string) error {
 		return nil
 	}
 	return errors.New("only support http(s) or socks5 protocol")
+}
+
+func (s *Scraper) GetRespHeader() http.Header {
+	return s.respHeader
 }
